@@ -6,6 +6,7 @@
 #include <QFont>
 #include <QFontMetrics>
 #include <QPainter>
+#include <QStringList>
 #include <QTransform>
 
 #include <algorithm>
@@ -311,36 +312,55 @@ void drawBoxMarker(QPainter& painter, const QPoint& center, const QString& annot
 void drawColorbar(QPainter& painter, const QImage& image, const ProcessingParams& params, int rangeMin,
                   int rangeMax, double tempMin, double tempMax)
 {
-    const int width = std::max(8, image.width() / 60);
-    const int xOffset = width + 30;
-    const int height = static_cast<int>(0.5 * image.height());
-    const int yOffset = static_cast<int>(0.25 * image.height());
-    const int x = image.width() - xOffset;
+    const int imageWidth = image.width();
+    const int imageHeight = image.height();
+    const int reference = std::max(1, std::min(imageWidth, imageHeight));
+    constexpr int tickCount = 5;
+
+    QFont font = painter.font();
+    font.setPixelSize(std::max(8, reference / 40));
+    painter.setFont(font);
+    const QFontMetrics metrics(font);
+
+    QStringList labels;
+    int labelWidth = 0;
+    for (int i = 0; i < tickCount; ++i) {
+        const double fraction = static_cast<double>(i) / (tickCount - 1);
+        const double value = tempMin + fraction * (tempMax - tempMin);
+        const QString text = QString::number(value, 'f', 1);
+        labels.append(text);
+        labelWidth = std::max(labelWidth, metrics.horizontalAdvance(text));
+    }
+
+    const int padding = std::max(4, reference / 100);
+    const int barWidth = std::max(4, reference / 40);
+    const int barHeight = std::max(2, imageHeight / 2);
+    const int barX = std::max(0, imageWidth - (barWidth + padding + labelWidth + padding));
+    const int barY = (imageHeight - barHeight) / 2;
 
     const double valueRange = std::max(1, rangeMax - rangeMin);
     const auto& lut = colormapLut(params.colormap);
 
-    QImage strip(width, height, QImage::Format_RGB32);
-    for (int y = 0; y < height; ++y) {
-        const double fraction = 1.0 - static_cast<double>(y) / std::max(1, height - 1);
+    QImage strip(barWidth, barHeight, QImage::Format_RGB32);
+    for (int row = 0; row < barHeight; ++row) {
+        const double fraction = 1.0 - static_cast<double>(row) / std::max(1, barHeight - 1);
         const int index = std::clamp(static_cast<int>(rangeMin + fraction * valueRange), 0, 255);
-        strip.fill(lut[static_cast<std::size_t>(index)]);
+        auto* line = reinterpret_cast<QRgb*>(strip.scanLine(row));
+        for (int column = 0; column < barWidth; ++column) {
+            line[column] = lut[static_cast<std::size_t>(index)];
+        }
     }
-    painter.drawImage(x, yOffset, strip);
+    painter.drawImage(barX, barY, strip);
 
     painter.setPen(QColor::fromRgb(kColorText));
-    painter.drawRect(x, yOffset, width, height);
+    painter.drawRect(barX, barY, barWidth, barHeight);
 
-    constexpr int ticks = 5;
-    QFont font = painter.font();
-    font.setPixelSize(std::max(10, image.height() / 40));
-    painter.setFont(font);
-    for (int i = 0; i < ticks; ++i) {
-        const double fraction = static_cast<double>(i) / (ticks - 1);
-        const int y = yOffset + static_cast<int>((1.0 - fraction) * (height - 1));
-        painter.drawLine(x, y, x + width, y);
-        const double label = tempMin + fraction * (tempMax - tempMin);
-        painter.drawText(QPoint(x + width + 4, y + font.pixelSize() / 3), QString::number(label, 'f', 1));
+    const int textX = barX + barWidth + padding;
+    for (int i = 0; i < tickCount; ++i) {
+        const double fraction = static_cast<double>(i) / (tickCount - 1);
+        const int tickY = barY + static_cast<int>((1.0 - fraction) * (barHeight - 1));
+        painter.drawLine(barX, tickY, barX + barWidth, tickY);
+        painter.drawText(QPoint(textX, tickY + metrics.ascent() / 2), labels.at(i));
     }
 }
 
@@ -387,7 +407,7 @@ void drawOverlays(QImage& image, const Image16& thermal, const ProcessingParams&
     painter.setRenderHint(QPainter::Antialiasing, true);
 
     QFont font = painter.font();
-    font.setPixelSize(std::max(10, image.height() / 40));
+    font.setPixelSize(std::max(8, std::min(image.width(), image.height()) / 40));
     painter.setFont(font);
     painter.setPen(QColor::fromRgb(kColorText));
 
