@@ -70,11 +70,10 @@ void MainWindow::onFrameReady(const QImage& image)
     m_view->setImage(image);
 }
 
-void MainWindow::onStatusUpdated(double fps, double spotTemp, quint64 framesRead, quint64 framesDropped)
+void MainWindow::onStatusUpdated(double fps, double spotTemp)
 {
     m_fpsLabel->setText(tr("%1 FPS").arg(fps, 0, 'f', 1));
     m_spotLabel->setText(tr("%1 \u00b0C").arg(spotTemp, 0, 'f', 1));
-    m_framesLabel->setText(tr("Frames: %1 (dropped %2)").arg(framesRead).arg(framesDropped));
 }
 
 void MainWindow::onConnectionChanged(bool connected)
@@ -393,12 +392,10 @@ void MainWindow::buildStatusBar()
     m_connectionLabel = new QLabel(tr("Disconnected"), this);
     m_spotLabel = new QLabel(tr("-- \u00b0C"), this);
     m_fpsLabel = new QLabel(tr("0.0 FPS"), this);
-    m_framesLabel = new QLabel(tr("Frames: 0"), this);
 
     statusBar()->addPermanentWidget(m_connectionLabel);
     statusBar()->addPermanentWidget(m_spotLabel);
     statusBar()->addPermanentWidget(m_fpsLabel);
-    statusBar()->addPermanentWidget(m_framesLabel);
 }
 
 void MainWindow::loadSettings()
@@ -424,30 +421,29 @@ void MainWindow::loadSettings()
         }
     }
 
-    const auto clampInt = [](const QVariant& value, int minimum, int maximum, int fallback) {
-        const int result = value.toInt();
-        if (result < minimum || result > maximum) {
-            return fallback;
+    const auto readInt = [&settings](const QString& key, int defaultValue, int minimum, int maximum) {
+        const int value = settings.value(key, defaultValue).toInt();
+        if (value < minimum) {
+            return minimum;
         }
-        return result;
+        if (value > maximum) {
+            return maximum;
+        }
+        return value;
     };
 
-    m_params.colormap = static_cast<Colormap>(
-        clampInt(settings.value(QStringLiteral("processing/colormap")), 0, 5,
-                 static_cast<int>(Colormap::Ironbow)));
+    m_params.colormap = static_cast<Colormap>(readInt(QStringLiteral("processing/colormap"),
+                                                      static_cast<int>(Colormap::Ironbow), 0, 5));
     m_params.agcMode = static_cast<AgcMode>(
-        clampInt(settings.value(QStringLiteral("processing/agc")), 0, 2,
-                 static_cast<int>(AgcMode::Factory)));
+        readInt(QStringLiteral("processing/agc"), static_cast<int>(AgcMode::Factory), 0, 2));
     m_params.scaleMode = static_cast<ScaleMode>(
-        clampInt(settings.value(QStringLiteral("processing/scale")), 0, 4,
-                 static_cast<int>(ScaleMode::Bicubic)));
+        readInt(QStringLiteral("processing/scale"), static_cast<int>(ScaleMode::Bicubic), 0, 4));
     m_params.hotspot = static_cast<HotspotMode>(
-        clampInt(settings.value(QStringLiteral("processing/hotspot")), 0, 3,
-                 static_cast<int>(HotspotMode::Off)));
+        readInt(QStringLiteral("processing/hotspot"), static_cast<int>(HotspotMode::Off), 0, 3));
 
-    const int rotation = clampInt(settings.value(QStringLiteral("processing/rotation")), 0, 270, 0);
-    m_params.rotation = (rotation == 90 || rotation == 180 || rotation == 270) ? rotation : 0;
-    m_params.zoom = clampInt(settings.value(QStringLiteral("processing/zoom")), 1, 5, 3);
+    const int rotation = readInt(QStringLiteral("processing/rotation"), 0, 0, 359);
+    m_params.rotation = (rotation % 90 == 0) ? rotation : 0;
+    m_params.zoom = readInt(QStringLiteral("processing/zoom"), 3, 1, 5);
     m_params.useClahe = settings.value(QStringLiteral("processing/clahe"), true).toBool();
     m_params.ddeStrength = settings.value(QStringLiteral("processing/dde"), 0.3).toDouble();
     m_params.tnrAlpha = settings.value(QStringLiteral("processing/tnr"), 0.5).toDouble();
@@ -460,9 +456,8 @@ void MainWindow::loadSettings()
     m_params.env.emissivity = settings.value(QStringLiteral("processing/emissivity"), 0.95).toDouble();
     m_params.env.reflectedTemp =
         settings.value(QStringLiteral("processing/reflectedTemp"), 25.0).toDouble();
-    const int gain = clampInt(settings.value(QStringLiteral("camera/gain")), 0, 1,
-                              static_cast<int>(GainMode::High));
-    m_params.gain = static_cast<GainMode>(gain);
+    m_params.gain = static_cast<GainMode>(
+        readInt(QStringLiteral("camera/gain"), static_cast<int>(GainMode::High), 0, 1));
 
     m_lockInConfig.port =
         settings.value(QStringLiteral("lockin/port"), QString::fromStdString(m_lockInDefaults.port))

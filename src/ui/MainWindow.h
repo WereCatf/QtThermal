@@ -30,7 +30,7 @@ protected:
 
 private slots:
     void onFrameReady(const QImage& image);
-    void onStatusUpdated(double fps, double spotTemp, quint64 framesRead, quint64 framesDropped);
+    void onStatusUpdated(double fps, double spotTemp);
     void onConnectionChanged(bool connected);
     void onDeviceInfoReady(const QString& model, const QString& firmware, const QString& partNumber,
                            const QString& serial, const QString& hardware, const QString& modelLong);
@@ -79,7 +79,6 @@ private:
     QLabel* m_connectionLabel = nullptr;
     QLabel* m_spotLabel = nullptr;
     QLabel* m_fpsLabel = nullptr;
-    QLabel* m_framesLabel = nullptr;
 
     QThread* m_captureThread = nullptr;
     CaptureWorker* m_worker = nullptr;
