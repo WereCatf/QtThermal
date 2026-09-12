@@ -1,0 +1,11 @@
+function(qtthermal_add_test name)
+    add_executable(${name} ${name}.cpp)
+    target_link_libraries(${name} PRIVATE qtthermal_lib Qt6::Test)
+    add_test(NAME ${name} COMMAND ${name})
+    set_tests_properties(${name} PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+endfunction()
+
+qtthermal_add_test(test_temperature)
+qtthermal_add_test(test_protocol)
+qtthermal_add_test(test_frameparser)
+qtthermal_add_test(test_imageprocessor)
