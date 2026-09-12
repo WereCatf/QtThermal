@@ -165,16 +165,30 @@ struct UsbCameraBackend::Impl {
             setError(error, modelName(modelFromPid(pid)) + " camera not found");
             return false;
         }
+        DWORD lastAssociatedError = ERROR_SUCCESS;
         if (interface1 == nullptr) {
-            WINUSB_INTERFACE_HANDLE associated = nullptr;
-            if (WinUsb_GetAssociatedInterface(interface0, 1, &associated)) {
-                interface1 = associated;
-                interface1Associated = true;
+            // WinUSB's associated-interface index is zero based: index 0 is the
+            // interface immediately following the one returned by WinUsb_Initialize.
+            for (UCHAR index = 0; index < 2 && interface1 == nullptr; ++index) {
+                WINUSB_INTERFACE_HANDLE associated = nullptr;
+                if (!WinUsb_GetAssociatedInterface(interface0, index, &associated)) {
+                    lastAssociatedError = GetLastError();
+                    continue;
+                }
+                USB_INTERFACE_DESCRIPTOR associatedDescriptor{};
+                if (WinUsb_QueryInterfaceSettings(associated, 0, &associatedDescriptor) &&
+                    associatedDescriptor.bInterfaceNumber == 1) {
+                    interface1 = associated;
+                    interface1Associated = true;
+                } else {
+                    WinUsb_Free(associated);
+                }
             }
         }
         if (interface1 == nullptr) {
             close();
-            setError(error, "streaming interface not found");
+            setError(error, "streaming interface not found (associated interface error " +
+                                std::to_string(static_cast<unsigned long>(lastAssociatedError)) + ")");
             return false;
         }
 
