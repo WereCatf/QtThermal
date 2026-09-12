@@ -2,6 +2,7 @@
 
 #include "lockin/LockInController.h"
 
+#include <QDebug>
 #include <QElapsedTimer>
 #include <QThread>
 
@@ -66,17 +67,20 @@ void CaptureWorker::run()
 
     std::string error;
     if (!m_backend->connect(&error)) {
+        qWarning().noquote() << "Camera connection failed:" << QString::fromStdString(error);
         emit errorOccurred(QString::fromStdString(error));
         emit connectionChanged(false);
         return;
     }
     if (!m_backend->initialize(&error)) {
+        qWarning().noquote() << "Camera initialization failed:" << QString::fromStdString(error);
         emit errorOccurred(QString::fromStdString(error));
         m_backend->disconnect();
         emit connectionChanged(false);
         return;
     }
     if (!m_backend->startStreaming(&error)) {
+        qWarning().noquote() << "Camera streaming failed:" << QString::fromStdString(error);
         emit errorOccurred(QString::fromStdString(error));
         m_backend->disconnect();
         emit connectionChanged(false);
@@ -84,6 +88,7 @@ void CaptureWorker::run()
     }
 
     const DeviceInfo& info = m_backend->deviceInfo();
+    qInfo().noquote() << "Camera connected:" << info.model << "firmware" << info.firmwareVersion;
     emit deviceInfoReady(info.model, info.firmwareVersion, info.partNumber, info.serial,
                          info.hardwareVersion, info.modelLong);
     emit connectionChanged(true);
