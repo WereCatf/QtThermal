@@ -49,7 +49,7 @@ public slots:
 
 signals:
     void frameReady(const QImage& image);
-    void statusUpdated(double fps, double spotTemp, quint64 framesRead, quint64 framesDropped);
+    void statusUpdated(double fps, double spotTemp);
     void connectionChanged(bool connected);
     void deviceInfoReady(const QString& model, const QString& firmware, const QString& partNumber,
                          const QString& serial, const QString& hardware, const QString& modelLong);

@@ -125,6 +125,7 @@ void CaptureWorker::run()
 
         ProcessingParams params = snapshotParams();
         params.gain = m_backend->gainMode();
+        params.fps = m_fps;
 
         if (m_rawDumpRequested.exchange(false)) {
             emit rawFrameReady(QVector<quint16>(thermal.data.begin(), thermal.data.end()),
@@ -158,8 +159,7 @@ void CaptureWorker::run()
             fpsTimer.restart();
         }
 
-        const FrameStats stats = m_backend->stats();
-        emit statusUpdated(m_fps, frame.spotTemp, stats.framesRead, stats.framesDropped);
+        emit statusUpdated(m_fps, frame.spotTemp);
     }
 
     m_backend->stopStreaming();
