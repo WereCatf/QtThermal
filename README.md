@@ -4,6 +4,8 @@ A native Qt6 desktop application for P3-series USB thermal cameras, with
 real-time display, radiometric temperature readout and optional lock-in
 thermography.
 
+![Screenshots](resources/other/screenshot.gif)
+
 ## Features
 
 - USB driver for frame capture and device control
