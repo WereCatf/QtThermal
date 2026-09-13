@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-09-13
+
+### Added
+
+- Configurable number of tracked hot and cold spots (1-10 each), marked with
+  spatially distinct boxes and temperatures.
+
 ## [0.3.0] - 2026-09-13
 
 ### Added
@@ -101,7 +108,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Persistent settings, including window size and position.
 - Simulated camera backend for hardware-free runs.
 
-[Unreleased]: https://example.invalid/QtThermal/compare/v0.3.0...HEAD
+[Unreleased]: https://example.invalid/QtThermal/compare/v0.4.0...HEAD
+[0.4.0]: https://example.invalid/QtThermal/releases/tag/v0.4.0
 [0.3.0]: https://example.invalid/QtThermal/releases/tag/v0.3.0
 [0.2.3]: https://example.invalid/QtThermal/releases/tag/v0.2.3
 [0.2.2]: https://example.invalid/QtThermal/releases/tag/v0.2.2
