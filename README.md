@@ -52,6 +52,29 @@ cmake --build --preset default
 ctest --preset default
 ```
 
+## Releases and packaging
+
+Tagged releases are built automatically by GitHub Actions
+(`.github/workflows/build.yml`) whenever a semantic-version tag (`vX.Y.Z`) is
+pushed, or when the workflow is dispatched manually. Each release provides:
+
+- `QtThermal-<version>-win64.zip` - portable bundle with the executable and all
+  required Qt DLLs and plugins.
+- `QtThermal-<version>-setup.exe` - Inno Setup installer with a Start Menu
+  shortcut, an optional desktop icon and an uninstaller.
+
+To build a package locally, deploy next to the executable and optionally
+compile the installer. Use an absolute install prefix so that the Qt
+deployment can generate `qt.conf`:
+
+```powershell
+cmake --install build --prefix "$PWD/dist"
+& "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DMyAppVersion=0.2.0 installer\QtThermal.iss
+```
+
+The application icon lives in `resources/icons` and is embedded into the
+executable (Windows resource), the Qt resource system and the installer.
+
 ## Running
 
 ```bash
