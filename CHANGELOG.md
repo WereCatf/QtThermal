@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-09-13
+
+### Fixed
+
+- Editing the fixed AGC range no longer switches the AGC mode; the range only
+  affects the view while Fixed range mode is active.
+- The fixed range is now edited in a dedicated dialog that shows the live scene
+  temperature range as a hint.
+- The fixed range spin boxes are limited to the P3 sensor range of -20 to 600
+  degrees Celsius, and the default range is 10-40 degrees Celsius.
+
 ## [0.2.2] - 2026-09-13
 
 ### Fixed
@@ -76,7 +87,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Persistent settings, including window size and position.
 - Simulated camera backend for hardware-free runs.
 
-[Unreleased]: https://example.invalid/QtThermal/compare/v0.2.2...HEAD
+[Unreleased]: https://example.invalid/QtThermal/compare/v0.2.3...HEAD
+[0.2.3]: https://example.invalid/QtThermal/releases/tag/v0.2.3
 [0.2.2]: https://example.invalid/QtThermal/releases/tag/v0.2.2
 [0.2.1]: https://example.invalid/QtThermal/releases/tag/v0.2.1
 [0.2.0]: https://example.invalid/QtThermal/releases/tag/v0.2.0
