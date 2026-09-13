@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QImage>
+#include <QString>
 #include <QWidget>
 
 namespace qtthermal {
@@ -14,6 +15,7 @@ public:
 
     void setImage(const QImage& image);
     void clear();
+    void setPlaceholderText(const QString& text);
     [[nodiscard]] QImage currentImage() const;
 
     [[nodiscard]] QSize minimumSizeHint() const override;
@@ -23,6 +25,7 @@ protected:
 
 private:
     QImage m_image;
+    QString m_placeholder = tr("No signal");
 };
 
 } // namespace qtthermal

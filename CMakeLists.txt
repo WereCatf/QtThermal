@@ -127,6 +127,8 @@ qt_add_executable(QtThermal
     src/ui/EmissivityDialog.cpp
     src/ui/FixedRangeDialog.h
     src/ui/FixedRangeDialog.cpp
+    src/ui/HelpDialog.h
+    src/ui/HelpDialog.cpp
     src/ui/LockInDialog.h
     src/ui/LockInDialog.cpp
 )
@@ -143,6 +145,13 @@ qt_add_resources(QtThermal "qtthermal_icons"
         "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/QtThermal_128.png"
         "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/QtThermal_256.png"
         "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/QtThermal.ico"
+)
+
+qt_add_resources(QtThermal "qtthermal_help"
+    PREFIX "/help"
+    BASE "${CMAKE_CURRENT_SOURCE_DIR}/resources/help"
+    FILES
+        "${CMAKE_CURRENT_SOURCE_DIR}/resources/help/help.html"
 )
 
 if(WIN32)

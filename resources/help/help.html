@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>QtThermal Help</title>
+<style>
+  body { font-family: sans-serif; line-height: 1.5; }
+  h1 { border-bottom: 2px solid palette(mid); padding-bottom: 4px; }
+  h2 { border-bottom: 1px solid palette(mid); padding-bottom: 2px; margin-top: 1.6em; }
+  h3 { margin-top: 1.2em; }
+  kbd { border: 1px solid palette(mid); border-radius: 3px; padding: 0 4px; font-family: monospace; }
+  code { font-family: monospace; }
+  dt { font-weight: bold; margin-top: 0.6em; }
+  dd { margin-left: 1.4em; margin-bottom: 0.4em; }
+  .toc a { text-decoration: none; }
+  .note { border-left: 3px solid palette(highlight); padding-left: 0.8em; }
+</style>
+</head>
+<body>
+
+<h1>QtThermal &mdash; User Guide</h1>
+
+<p>
+QtThermal displays live video and radiometric temperature data from P3-series USB
+thermal cameras and can perform lock-in thermography to reveal very small
+temperature changes.
+</p>
+
+<h2 id="toc">Contents</h2>
+<ul class="toc">
+  <li><a href="#getting-started">Getting started</a></li>
+  <li><a href="#main-window">The main window</a></li>
+  <li><a href="#features">Feature reference</a></li>
+  <li><a href="#glossary">Glossary</a></li>
+  <li><a href="#tips">Tips and troubleshooting</a></li>
+</ul>
+
+<h2 id="getting-started">Getting started</h2>
+
+<h3>Install the USB driver</h3>
+<p>
+The camera must be bound to a libusb-compatible driver.
+</p>
+<ul>
+  <li><b>Windows:</b> use <a href="https://zadig.akeo.ie/">Zadig</a>. Choose
+      <i>Options &rarr; List All Devices</i>, select the camera (VID&nbsp;3474,
+      PID&nbsp;45A2 for P3 or 45C2 for P1) and replace its driver with <b>WinUSB</b>.</li>
+  <li><b>Linux:</b> add a udev rule granting non-root access, for example:
+      <pre>SUBSYSTEM=="usb", ATTR{idVendor}=="3474", ATTR{idProduct}=="45a2", MODE="0666"</pre>
+      then reload the rules with <code>udevadm control --reload-rules &amp;&amp; udevadm trigger</code>.</li>
+</ul>
+
+<h3>Start the application</h3>
+<ul>
+  <li><code>QtThermal</code> &mdash; use the P3 camera (default).</li>
+  <li><code>QtThermal --model p1</code> &mdash; use the P1 camera.</li>
+  <li><code>QtThermal --simulate</code> &mdash; run without hardware using a
+      synthetic image, useful for exploring the interface.</li>
+</ul>
+<p>
+After launch the status bar and the image area show <b>Connecting...</b> while the
+application opens the device and starts the video stream. The first received
+frame switches the status to <b>Connected</b> and replaces the placeholder with
+live video.
+</p>
+
+<h2 id="main-window">The main window</h2>
+<dl>
+  <dt>Thermal view</dt>
+  <dd>The centre of the window shows the live thermal image with an optional
+      temperature colour bar, centre reticule and hotspot markers.</dd>
+  <dt>Status bar</dt>
+  <dd>On the right it shows the connection state
+      (<b>Connecting...</b>, <b>Connected</b> or <b>Disconnected</b>), the
+      temperature at the centre, and the frame rate. When not connected the view
+      shows <b>No signal</b>.</dd>
+  <dt>Menu bar</dt>
+  <dd>Every function is available from the menus; no keyboard shortcuts are
+      required for the camera functions.</dd>
+</dl>
+
+<h2 id="features">Feature reference</h2>
+
+<h3>File</h3>
+<dl>
+  <dt>Save Screenshot...</dt>
+  <dd>Saves the current on-screen image (with overlays) as a PNG file.</dd>
+  <dt>Dump Raw Data...</dt>
+  <dd>Saves the current 16-bit thermal frame as a PGM file that preserves the
+      raw sensor values for later analysis.</dd>
+  <dt>Quit</dt>
+  <dd>Closes the application; all settings are stored automatically.</dd>
+</dl>
+
+<h3>View</h3>
+<dl>
+  <dt>Colormap</dt>
+  <dd>Selects the false-colour palette: White Hot, Black Hot, Rainbow, Ironbow,
+      Military or Sepia.</dd>
+  <dt>Rotation</dt>
+  <dd>Rotates the view by 0&deg;, 90&deg;, 180&deg; or 270&deg;.</dd>
+  <dt>Mirror</dt>
+  <dd>Flips the image horizontally.</dd>
+  <dt>Zoom</dt>
+  <dd>Magnifies the image from 1x to 5x.</dd>
+  <dt>Interpolation</dt>
+  <dd>Controls how the image is smoothed when it is enlarged 2x: Off, Nearest,
+      Bilinear, Bicubic or Lanczos.</dd>
+  <dt>Reticule</dt>
+  <dd>Shows a centre crosshair with the temperature at that point.</dd>
+  <dt>Colorbar</dt>
+  <dd>Shows a vertical temperature scale using the active colormap.</dd>
+  <dt>Hotspots</dt>
+  <dd>Marks the hottest and/or coldest point in the scene with a box and value.</dd>
+  <dt>Help Overlay</dt>
+  <dd>Draws a short reminder of where the main functions live.</dd>
+  <dt>Full Screen</dt>
+  <dd>Expands the window to fill the screen.</dd>
+</dl>
+
+<h3>Processing</h3>
+<dl>
+  <dt>AGC &mdash; Factory</dt>
+  <dd>Uses the camera's built-in automatic gain control. This is the most
+      responsive mode and the usual choice for general viewing.</dd>
+  <dt>AGC &mdash; Temporal</dt>
+  <dd>Normalises the image using smoothed percentile bounds so the contrast
+      adapts to the scene without the hardware AGC.</dd>
+  <dt>AGC &mdash; Fixed Range</dt>
+  <dd>Maps a fixed temperature window (for example 10&ndash;40&nbsp;&deg;C) onto
+      the full colour scale. The window is chosen with
+      <i>Fixed Range...</i>; anything below the minimum is black and anything
+      above the maximum is white.</dd>
+  <dt>Enhanced (CLAHE + DDE)</dt>
+  <dd>Applies local contrast enhancement and edge sharpening to reveal fine
+      detail.</dd>
+  <dt>Detail Enhancement (DDE)</dt>
+  <dd>Sharpens edges (unsharp masking) without the local contrast step.</dd>
+  <dt>Temporal Noise Reduction</dt>
+  <dd>Blends successive frames to reduce noise; moving objects are slightly
+      softened.</dd>
+  <dt>Emissivity</dt>
+  <dd>Sets the surface emissivity used for temperature correction, either from
+      common presets or a custom value.</dd>
+</dl>
+
+<h3>Camera</h3>
+<dl>
+  <dt>Model</dt>
+  <dd>Selects the connected camera model (P1 or P3) and reconnects.</dd>
+  <dt>Reconnect</dt>
+  <dd>Restarts the device connection and video stream.</dd>
+  <dt>Trigger Shutter/NUC</dt>
+  <dd>Performs a non-uniformity correction (a shutter calibration). The camera
+      also does this automatically about every 90 seconds.</dd>
+  <dt>Gain</dt>
+  <dd>High gain is more sensitive (-20&nbsp;to&nbsp;150&nbsp;&deg;C); Low gain
+      covers a wider range (0&nbsp;to&nbsp;550&nbsp;&deg;C).</dd>
+  <dt>Device Information...</dt>
+  <dd>Shows the model, firmware, part number, serial and hardware revision.</dd>
+</dl>
+
+<h3>Lock-In</h3>
+<dl>
+  <dt>Start / Stop</dt>
+  <dd>Begins or ends a lock-in thermography integration. The result is shown as
+      a 2&times;2 grid of panes (in-phase, quadrature, amplitude, phase) next to
+      the thermal image.</dd>
+  <dt>Configure...</dt>
+  <dd>Edits the serial port, baud rate, period, integration time and output
+      inversion of the external load controller.</dd>
+</dl>
+
+<h3>Help</h3>
+<dl>
+  <dt>User Guide <kbd>F1</kbd></dt>
+  <dd>Opens this document.</dd>
+  <dt>About QtThermal / About Qt</dt>
+  <dd>Shows application and framework version information.</dd>
+</dl>
+
+<h2 id="glossary">Glossary</h2>
+<dl>
+  <dt>AGC (Automatic Gain Control)</dt>
+  <dd>Automatically maps the scene's temperature range onto the available
+      display levels so the image is neither washed out nor too dark.</dd>
+  <dt>NUC / Shutter</dt>
+  <dd>Non-Uniformity Correction. The camera briefly closes its shutter to
+      re-calibrate the sensor and remove fixed-pattern noise.</dd>
+  <dt>Emissivity</dt>
+  <dd>How efficiently a surface radiates infrared energy, from 0 (perfect
+      mirror) to 1 (perfect black body). Correct values give accurate
+      temperatures; shiny metal surfaces have low emissivity and are hard to
+      measure.</dd>
+  <dt>Reflected temperature</dt>
+  <dd>The background temperature that a low-emissivity surface reflects; used
+      together with emissivity in the correction formula.</dd>
+  <dt>DDE (Digital Detail Enhancement)</dt>
+  <dd>Edge sharpening that makes small details easier to see.</dd>
+  <dt>CLAHE</dt>
+  <dd>Contrast Limited Adaptive Histogram Equalisation; boosts local contrast
+      without over-amplifying noise.</dd>
+  <dt>TNR (Temporal Noise Reduction)</dt>
+  <dd>Reduces random frame-to-frame noise by blending consecutive frames.</dd>
+  <dt>Gain mode</dt>
+  <dd>A sensor setting that trades temperature range for sensitivity. High gain
+      resolves smaller differences over a narrower range; Low gain covers
+      higher temperatures.</dd>
+  <dt>Lock-in thermography</dt>
+  <dd>A technique that switches a device's power on and off and integrates the
+      camera signal in sync with that switching, revealing heating far below the
+      camera's noise floor.</dd>
+  <dt>Reticule</dt>
+  <dd>The crosshair marking the centre of the image, where the spot temperature
+      is measured.</dd>
+  <dt>Colorbar</dt>
+  <dd>A legend that maps colours in the image to temperatures.</dd>
+  <dt>Hotspot</dt>
+  <dd>The hottest (or coldest) point in the scene, marked automatically.</dd>
+  <dt>Interpolation (scale mode)</dt>
+  <dd>The filter used when enlarging the image; smoother modes look nicer,
+      Nearest keeps hard pixels.</dd>
+  <dt>Radiometric</dt>
+  <dd>Data that contains calibrated temperature information rather than only
+      brightness.</dd>
+  <dt>Scene range</dt>
+  <dd>The coldest and hottest temperatures currently visible in the image.</dd>
+  <dt>FPS</dt>
+  <dd>Frames per second; how many images the camera delivers each second
+      (roughly 25 for these cameras).</dd>
+</dl>
+
+<h2 id="tips">Tips and troubleshooting</h2>
+
+<h3>Tips</h3>
+<ul>
+  <li>Let the camera warm up for about five minutes, then trigger a shutter/NUC
+      for the most accurate readings.</li>
+  <li>In Fixed Range mode, use the <i>Fixed Range...</i> dialog: it shows the
+      current scene range so you can pick a window that contains it (for
+      example 15&ndash;25&nbsp;&deg;C in a room that is about 18&nbsp;&deg;C).
+      A window that is entirely above or below the scene makes the image
+      black.</li>
+  <li>Set the emissivity to match the material you are measuring. The correction
+      is only reliable for emissivity above about 0.6.</li>
+  <li>Use lock-in thermography when you need to see changes smaller than the
+      camera's normal noise; it needs an external controller on a serial
+      port.</li>
+  <li>All options, including the window size and position, are remembered
+      between sessions.</li>
+  <li>Save a raw dump (PGM) when you want to analyse the exact 16-bit values
+      later.</li>
+</ul>
+
+<h3>Troubleshooting</h3>
+<dl>
+  <dt>The status stays on "Connecting..."</dt>
+  <dd>The USB handshake takes a few seconds. If it never completes, check the
+      cable and port, and make sure no other application is using the camera.</dd>
+  <dt>"Camera not found"</dt>
+  <dd>The device is not bound to the correct driver. Re-install WinUSB with
+      Zadig on Windows, or check the udev rule on Linux.</dd>
+  <dt>The image is purple or full of garbage</dt>
+  <dd>The USB stream is in a bad state; use <i>Camera &rarr; Reconnect</i> or
+      unplug and replug the camera.</dd>
+  <dt>The temperatures drift</dt>
+  <dd>Trigger a shutter/NUC and allow the camera to reach a stable
+      temperature.</dd>
+  <dt>The image is black in Fixed Range mode</dt>
+  <dd>The chosen window does not contain the scene. Open
+      <i>Processing &rarr; AGC &rarr; Fixed Range...</i>, check the scene hint and
+      widen or move the window.</dd>
+</dl>
+
+</body>
+</html>

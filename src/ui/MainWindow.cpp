@@ -3,6 +3,7 @@
 #include "core/Temperature.h"
 #include "ui/EmissivityDialog.h"
 #include "ui/FixedRangeDialog.h"
+#include "ui/HelpDialog.h"
 #include "ui/LockInDialog.h"
 #include "ui/ThermalView.h"
 #include "version.h"
@@ -15,6 +16,7 @@
 #include <QDateTime>
 #include <QFile>
 #include <QFileDialog>
+#include <QKeySequence>
 #include <QLabel>
 #include <QMenu>
 #include <QMenuBar>
@@ -68,6 +70,9 @@ void MainWindow::onFrameReady(const QImage& image)
 {
     m_lastImage = image;
     m_view->setImage(image);
+    if (m_connectionState != ConnectionState::Streaming) {
+        setConnectionState(ConnectionState::Streaming);
+    }
 }
 
 void MainWindow::onStatusUpdated(double fps, double spotTemp, double minTemp, double maxTemp)
@@ -81,7 +86,29 @@ void MainWindow::onStatusUpdated(double fps, double spotTemp, double minTemp, do
 
 void MainWindow::onConnectionChanged(bool connected)
 {
-    m_connectionLabel->setText(connected ? tr("Connected") : tr("Disconnected"));
+    if (!connected) {
+        setConnectionState(ConnectionState::Disconnected);
+    }
+    // While connected, keep the "Connecting..." state until the first frame
+    // arrives and proves that thermal data is actually flowing.
+}
+
+void MainWindow::setConnectionState(ConnectionState state)
+{
+    m_connectionState = state;
+    switch (state) {
+    case ConnectionState::Disconnected:
+        m_connectionLabel->setText(tr("Disconnected"));
+        m_view->setPlaceholderText(tr("No signal"));
+        break;
+    case ConnectionState::Connecting:
+        m_connectionLabel->setText(tr("Connecting..."));
+        m_view->setPlaceholderText(tr("Connecting..."));
+        break;
+    case ConnectionState::Streaming:
+        m_connectionLabel->setText(tr("Connected"));
+        break;
+    }
 }
 
 void MainWindow::onDeviceInfoReady(const QString& model, const QString& firmware,
@@ -378,6 +405,10 @@ void MainWindow::buildMenus()
     connect(configureAction, &QAction::triggered, this, &MainWindow::showLockInConfig);
 
     QMenu* helpMenu = menuBar()->addMenu(tr("&Help"));
+    QAction* helpAction = helpMenu->addAction(tr("&User Guide"));
+    helpAction->setShortcut(QKeySequence::HelpContents);
+    connect(helpAction, &QAction::triggered, this, &MainWindow::showHelpDialog);
+    helpMenu->addSeparator();
     QAction* aboutAction = helpMenu->addAction(tr("&About QtThermal"));
     connect(aboutAction, &QAction::triggered, this, [this]() {
         QMessageBox::about(this, tr("About QtThermal"),
@@ -516,6 +547,8 @@ void MainWindow::startCapture()
         return;
     }
 
+    setConnectionState(ConnectionState::Connecting);
+
     m_captureThread = new QThread(this);
     m_worker = new CaptureWorker(m_model, m_simulate);
     m_worker->setParams(m_params);
@@ -538,6 +571,8 @@ void MainWindow::startCapture()
 void MainWindow::stopCapture()
 {
     if (m_worker != nullptr) {
+        // Ignore any late signals from the worker that is being torn down.
+        m_worker->disconnect(this);
         m_worker->requestStop();
     }
     if (m_captureThread != nullptr) {
@@ -549,6 +584,7 @@ void MainWindow::stopCapture()
     delete m_captureThread;
     m_captureThread = nullptr;
 
+    setConnectionState(ConnectionState::Disconnected);
     m_view->clear();
 }
 
@@ -704,6 +740,16 @@ void MainWindow::requestRawDump()
     }
     m_pendingDumpPath = path;
     m_worker->requestRawDump();
+}
+
+void MainWindow::showHelpDialog()
+{
+    if (m_helpDialog == nullptr) {
+        m_helpDialog = new HelpDialog(this);
+    }
+    m_helpDialog->show();
+    m_helpDialog->raise();
+    m_helpDialog->activateWindow();
 }
 
 void MainWindow::updateWindowTitle()

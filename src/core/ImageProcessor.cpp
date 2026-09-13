@@ -460,6 +460,7 @@ void drawOverlays(QImage& image, const Image16& thermal, const ProcessingParams&
             QStringLiteral("AGC / enhancement / emissivity: Processing menu"),
             QStringLiteral("Lock-in thermography: Lock-In menu"),
             QStringLiteral("Screenshot / raw dump: File menu"),
+            QStringLiteral("User guide: Help menu (F1)"),
         };
         const int lineHeight = font.pixelSize() + 6;
         const int boxWidth = image.width() / 2;

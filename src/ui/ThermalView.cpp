@@ -25,6 +25,12 @@ void ThermalView::clear()
     update();
 }
 
+void ThermalView::setPlaceholderText(const QString& text)
+{
+    m_placeholder = text;
+    update();
+}
+
 QImage ThermalView::currentImage() const
 {
     return m_image;
@@ -44,7 +50,7 @@ void ThermalView::paintEvent(QPaintEvent* event)
 
     if (m_image.isNull()) {
         painter.setPen(Qt::gray);
-        painter.drawText(rect(), Qt::AlignCenter, tr("No signal"));
+        painter.drawText(rect(), Qt::AlignCenter, m_placeholder);
         return;
     }
 

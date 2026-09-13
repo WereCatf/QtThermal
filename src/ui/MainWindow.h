@@ -7,6 +7,7 @@
 
 #include <QImage>
 #include <QMainWindow>
+#include <QPointer>
 #include <QString>
 
 class QAction;
@@ -15,6 +16,7 @@ class QThread;
 
 namespace qtthermal {
 
+class HelpDialog;
 class ThermalView;
 
 /// Main application window: menus, status bar and the thermal view.
@@ -58,8 +60,16 @@ private:
     void stopLockIn();
     void saveScreenshot();
     void requestRawDump();
+    void showHelpDialog();
 
     void updateWindowTitle();
+
+    enum class ConnectionState {
+        Disconnected,
+        Connecting,
+        Streaming,
+    };
+    void setConnectionState(ConnectionState state);
 
     Model m_model;
     bool m_simulate = false;
@@ -85,6 +95,9 @@ private:
     LockInController* m_lockIn = nullptr;
     QAction* m_lockInStartAction = nullptr;
     QAction* m_lockInStopAction = nullptr;
+    QPointer<HelpDialog> m_helpDialog;
+
+    ConnectionState m_connectionState = ConnectionState::Disconnected;
 
     QImage m_lastImage;
     QString m_pendingDumpPath;
