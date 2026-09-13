@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-09-13
+
+### Fixed
+
+- CI: build with Ninja and the runner's MSVC toolchain instead of the Visual
+  Studio generator, which is no longer available on `windows-latest`
+  (now a Visual Studio 2026 image).
+
 ## [0.2.1] - 2026-09-13
 
 ### Fixed
@@ -68,7 +76,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Persistent settings, including window size and position.
 - Simulated camera backend for hardware-free runs.
 
-[Unreleased]: https://example.invalid/QtThermal/compare/v0.2.1...HEAD
+[Unreleased]: https://example.invalid/QtThermal/compare/v0.2.2...HEAD
+[0.2.2]: https://example.invalid/QtThermal/releases/tag/v0.2.2
 [0.2.1]: https://example.invalid/QtThermal/releases/tag/v0.2.1
 [0.2.0]: https://example.invalid/QtThermal/releases/tag/v0.2.0
 [0.1.2]: https://example.invalid/QtThermal/releases/tag/v0.1.2
