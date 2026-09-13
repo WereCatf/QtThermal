@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-13
+
+### Added
+
+- Embedded user guide (Help > User Guide, F1) with a feature reference, a
+  glossary of thermal-imaging terms, and tips and troubleshooting.
+- The view and status bar now show "Connecting..." until the first thermal
+  frame has been received.
+
+### Changed
+
+- "No signal" is only shown when the application is not actively waiting for
+  data (disconnected, stopped or after a connection failure).
+
 ## [0.2.3] - 2026-09-13
 
 ### Fixed
@@ -87,7 +101,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Persistent settings, including window size and position.
 - Simulated camera backend for hardware-free runs.
 
-[Unreleased]: https://example.invalid/QtThermal/compare/v0.2.3...HEAD
+[Unreleased]: https://example.invalid/QtThermal/compare/v0.3.0...HEAD
+[0.3.0]: https://example.invalid/QtThermal/releases/tag/v0.3.0
 [0.2.3]: https://example.invalid/QtThermal/releases/tag/v0.2.3
 [0.2.2]: https://example.invalid/QtThermal/releases/tag/v0.2.2
 [0.2.1]: https://example.invalid/QtThermal/releases/tag/v0.2.1

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.21)
 
 project(
     QtThermal
-    VERSION 0.2.3
+    VERSION 0.3.0
     DESCRIPTION "Qt6 thermal camera viewer for P3-series USB thermal cameras"
     HOMEPAGE_URL "https://example.invalid/QtThermal"
     LANGUAGES CXX
