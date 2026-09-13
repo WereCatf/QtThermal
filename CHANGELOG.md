@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-13
+
+### Added
+
+- Application icon for the executable, window, taskbar and dialogs.
+- Inno Setup installer with custom wizard artwork.
+- GitHub Actions workflow that builds the Windows packages and publishes a
+  release for every semantic-version tag (and on manual dispatch).
+- Portable ZIP package containing the executable and all required Qt DLLs and
+  plugins.
+
 ## [0.1.2] - 2026-09-12
 
 ### Fixed
@@ -50,7 +61,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Persistent settings, including window size and position.
 - Simulated camera backend for hardware-free runs.
 
-[Unreleased]: https://example.invalid/QtThermal/compare/v0.1.2...HEAD
+[Unreleased]: https://example.invalid/QtThermal/compare/v0.2.0...HEAD
+[0.2.0]: https://example.invalid/QtThermal/releases/tag/v0.2.0
 [0.1.2]: https://example.invalid/QtThermal/releases/tag/v0.1.2
 [0.1.1]: https://example.invalid/QtThermal/releases/tag/v0.1.1
 [0.1.0]: https://example.invalid/QtThermal/releases/tag/v0.1.0
