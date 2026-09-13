@@ -111,7 +111,10 @@ live video.
   <dt>Colorbar</dt>
   <dd>Shows a vertical temperature scale using the active colormap.</dd>
   <dt>Hotspots</dt>
-  <dd>Marks the hottest and/or coldest point in the scene with a box and value.</dd>
+  <dd>Marks the hottest and/or coldest points in the scene with a box and
+      temperature value. <i>Tracked hotspots...</i> sets how many of each to
+      track (1&ndash;10); the points are kept spatially separate so they do not
+      pile up on a single spot.</dd>
   <dt>Help Overlay</dt>
   <dd>Draws a short reminder of where the main functions live.</dd>
   <dt>Full Screen</dt>
@@ -216,7 +219,8 @@ live video.
   <dt>Colorbar</dt>
   <dd>A legend that maps colours in the image to temperatures.</dd>
   <dt>Hotspot</dt>
-  <dd>The hottest (or coldest) point in the scene, marked automatically.</dd>
+  <dd>A local hottest or coldest point in the scene, marked automatically. Up
+      to ten of each can be tracked.</dd>
   <dt>Interpolation (scale mode)</dt>
   <dd>The filter used when enlarging the image; smoother modes look nicer,
       Nearest keeps hard pixels.</dd>

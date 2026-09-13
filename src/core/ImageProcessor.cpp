@@ -57,6 +57,61 @@ float percentileSortedFloat(std::vector<float>& sorted, double p)
                               static_cast<double>(sorted[upper]) * fraction);
 }
 
+/// Pick spatially distinct temperature extremes using non-maximum suppression.
+///
+/// The hottest (or coldest) pixel is recorded, a small neighbourhood around it
+/// is suppressed, and the search repeats, so several markers never pile up on
+/// the same hot or cold blob.
+std::vector<Hotspot> findExtremes(const Image16& thermal, int count, bool findMax, const EnvParams& env)
+{
+    std::vector<Hotspot> result;
+    if (thermal.isEmpty() || count <= 0) {
+        return result;
+    }
+
+    const int width = thermal.width;
+    const int height = thermal.height;
+    const int radius = std::max(2, std::min(width, height) / 24);
+    const int radiusSquared = radius * radius;
+
+    std::vector<char> suppressed(thermal.data.size(), 0);
+    for (int n = 0; n < count; ++n) {
+        int bestIndex = -1;
+        for (std::size_t i = 0; i < thermal.data.size(); ++i) {
+            if (suppressed[i] != 0) {
+                continue;
+            }
+            if (bestIndex < 0) {
+                bestIndex = static_cast<int>(i);
+                continue;
+            }
+            const bool better = findMax ? thermal.data[i] > thermal.data[bestIndex]
+                                        : thermal.data[i] < thermal.data[bestIndex];
+            if (better) {
+                bestIndex = static_cast<int>(i);
+            }
+        }
+        if (bestIndex < 0) {
+            break;
+        }
+
+        const int bestX = bestIndex % width;
+        const int bestY = bestIndex / width;
+        result.push_back(Hotspot{bestX, bestY, rawToCelsiusCorrected(thermal.data[bestIndex], env)});
+
+        for (int y = std::max(0, bestY - radius); y <= std::min(height - 1, bestY + radius); ++y) {
+            for (int x = std::max(0, bestX - radius); x <= std::min(width - 1, bestX + radius); ++x) {
+                const int dx = x - bestX;
+                const int dy = y - bestY;
+                if (dx * dx + dy * dy <= radiusSquared) {
+                    suppressed[static_cast<std::size_t>(y) * width + x] = 1;
+                }
+            }
+        }
+    }
+    return result;
+}
+
 Image8 agcTemporal(const Image16& thermal, double pct, double alpha, bool& initialized, double& emaLow,
                    double& emaHigh)
 {
@@ -442,14 +497,18 @@ void drawOverlays(QImage& image, const Image16& thermal, const ProcessingParams&
 
     const int markerSize = std::max(16, image.height() / 24);
     if (params.hotspot == HotspotMode::Max || params.hotspot == HotspotMode::MinMax) {
-        const QPoint point = coordToImage(frame.hotX, frame.hotY, thermal, image, params);
-        drawBoxMarker(painter, point, QStringLiteral("%1C").arg(frame.maxTemp, 0, 'f', 1), kColorMax,
-                      markerSize);
+        for (const Hotspot& spot : frame.hotSpots) {
+            const QPoint point = coordToImage(spot.x, spot.y, thermal, image, params);
+            drawBoxMarker(painter, point, QStringLiteral("%1C").arg(spot.temp, 0, 'f', 1), kColorMax,
+                          markerSize);
+        }
     }
     if (params.hotspot == HotspotMode::Min || params.hotspot == HotspotMode::MinMax) {
-        const QPoint point = coordToImage(frame.coldX, frame.coldY, thermal, image, params);
-        drawBoxMarker(painter, point, QStringLiteral("%1C").arg(frame.minTemp, 0, 'f', 1), kColorMin,
-                      markerSize);
+        for (const Hotspot& spot : frame.coldSpots) {
+            const QPoint point = coordToImage(spot.x, spot.y, thermal, image, params);
+            drawBoxMarker(painter, point, QStringLiteral("%1C").arg(spot.temp, 0, 'f', 1), kColorMin,
+                          markerSize);
+        }
     }
 
     if (params.showHelp) {
@@ -669,26 +728,25 @@ ProcessedFrame ImageProcessor::process(const Image16& thermal, const Image8& ir,
     const int centerY = thermal.height / 2;
     frame.spotTemp = rawToCelsiusCorrected(thermal.at(centerX, centerY), params.env);
 
-    int hotIndex = 0;
-    int coldIndex = 0;
     std::uint16_t maxRaw = thermal.data[0];
     std::uint16_t minRaw = thermal.data[0];
     for (std::size_t i = 1; i < thermal.data.size(); ++i) {
-        if (thermal.data[i] > maxRaw) {
-            maxRaw = thermal.data[i];
-            hotIndex = static_cast<int>(i);
-        }
-        if (thermal.data[i] < minRaw) {
-            minRaw = thermal.data[i];
-            coldIndex = static_cast<int>(i);
-        }
+        maxRaw = std::max(maxRaw, thermal.data[i]);
+        minRaw = std::min(minRaw, thermal.data[i]);
     }
-    frame.hotX = hotIndex % thermal.width;
-    frame.hotY = hotIndex / thermal.width;
-    frame.coldX = coldIndex % thermal.width;
-    frame.coldY = coldIndex / thermal.width;
     frame.maxTemp = rawToCelsiusCorrected(maxRaw, params.env);
     frame.minTemp = rawToCelsiusCorrected(minRaw, params.env);
+
+    const bool trackHot = params.hotspot == HotspotMode::Max || params.hotspot == HotspotMode::MinMax;
+    const bool trackCold = params.hotspot == HotspotMode::Min || params.hotspot == HotspotMode::MinMax;
+    if (trackHot) {
+        frame.hotSpots = findExtremes(
+            thermal, std::clamp(params.hotspotMaxCount, 1, kMaxTrackedHotspots), true, params.env);
+    }
+    if (trackCold) {
+        frame.coldSpots = findExtremes(
+            thermal, std::clamp(params.hotspotMinCount, 1, kMaxTrackedHotspots), false, params.env);
+    }
 
     if (params.mirror) {
         gray = flipHorizontal(gray);

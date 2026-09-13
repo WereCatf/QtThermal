@@ -4,6 +4,8 @@
 
 #include <QtTest>
 
+#include <algorithm>
+
 using namespace qtthermal;
 
 namespace {
@@ -74,6 +76,7 @@ private slots:
     void processScaleDoublesSize();
     void processFixedRange();
     void processFixedRangeContainsScene();
+    void processTrackedHotspots();
     void processRotationSwapsAxes();
     void processWithOverlays();
 };
@@ -149,6 +152,45 @@ void ImageProcessorTest::processFixedRangeContainsScene()
 
     QVERIFY(meanBrightness(inFrame.image) > meanBrightness(aboveFrame.image));
     QVERIFY(meanBrightness(inFrame.image) > 10.0);
+}
+
+void ImageProcessorTest::processTrackedHotspots()
+{
+    ImageProcessor processor;
+    ProcessingParams params = baseParams();
+    params.hotspot = HotspotMode::MinMax;
+    params.hotspotMaxCount = 3;
+    params.hotspotMinCount = 2;
+
+    const ProcessedFrame frame = processor.process(makeThermal(64, 48), makeIr(64, 48), params);
+    QCOMPARE(static_cast<int>(frame.hotSpots.size()), 3);
+    QCOMPARE(static_cast<int>(frame.coldSpots.size()), 2);
+
+    for (std::size_t i = 1; i < frame.hotSpots.size(); ++i) {
+        QVERIFY(frame.hotSpots[i - 1].temp >= frame.hotSpots[i].temp);
+    }
+    for (std::size_t i = 1; i < frame.coldSpots.size(); ++i) {
+        QVERIFY(frame.coldSpots[i - 1].temp <= frame.coldSpots[i].temp);
+    }
+    QVERIFY(qAbs(frame.hotSpots.front().temp - frame.maxTemp) < 1e-9);
+    QVERIFY(qAbs(frame.coldSpots.front().temp - frame.minTemp) < 1e-9);
+
+    // The non-maximum suppression must keep the tracked points apart.
+    const int radius = std::max(2, std::min(64, 48) / 24);
+    const auto wellSeparated = [radius](const std::vector<Hotspot>& spots) {
+        for (std::size_t i = 0; i < spots.size(); ++i) {
+            for (std::size_t j = i + 1; j < spots.size(); ++j) {
+                const int dx = spots[i].x - spots[j].x;
+                const int dy = spots[i].y - spots[j].y;
+                if (dx * dx + dy * dy <= radius * radius) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    };
+    QVERIFY(wellSeparated(frame.hotSpots));
+    QVERIFY(wellSeparated(frame.coldSpots));
 }
 
 void ImageProcessorTest::processRotationSwapsAxes()

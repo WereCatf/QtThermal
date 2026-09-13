@@ -55,6 +55,7 @@ private:
     void showEmissivityDialog();
     void setEmissivity(double value);
     void showFixedRangeDialog();
+    void showHotspotDialog();
     void showLockInConfig();
     void startLockIn();
     void stopLockIn();

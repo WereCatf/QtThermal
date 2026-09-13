@@ -129,6 +129,8 @@ qt_add_executable(QtThermal
     src/ui/FixedRangeDialog.cpp
     src/ui/HelpDialog.h
     src/ui/HelpDialog.cpp
+    src/ui/HotspotDialog.h
+    src/ui/HotspotDialog.cpp
     src/ui/LockInDialog.h
     src/ui/LockInDialog.cpp
 )

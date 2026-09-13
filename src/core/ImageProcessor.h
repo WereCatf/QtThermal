@@ -6,6 +6,7 @@
 #include <QImage>
 
 #include <optional>
+#include <vector>
 
 namespace qtthermal {
 
@@ -33,6 +34,9 @@ enum class HotspotMode {
     MinMax = 3,
 };
 
+/// Upper limit for the number of tracked hot and cold spots.
+inline constexpr int kMaxTrackedHotspots = 10;
+
 /// All tunable parameters affecting the rendered frame.
 struct ProcessingParams {
     AgcMode agcMode = AgcMode::Factory;
@@ -48,6 +52,8 @@ struct ProcessingParams {
     bool showColorbar = true;
     bool showHelp = false;
     HotspotMode hotspot = HotspotMode::Off;
+    int hotspotMaxCount = 1;
+    int hotspotMinCount = 1;
     double fixedRangeMin = 10.0;
     double fixedRangeMax = 40.0;
     EnvParams env;
@@ -66,16 +72,21 @@ struct LockInPanes {
     [[nodiscard]] bool isValid() const { return !inPhase.isEmpty() && !amplitude.isEmpty(); }
 };
 
+/// A single tracked temperature extreme.
+struct Hotspot {
+    int x = 0;
+    int y = 0;
+    double temp = 0.0;
+};
+
 /// Result of rendering a single thermal frame.
 struct ProcessedFrame {
     QImage image;
     double spotTemp = 0.0;
     double minTemp = 0.0;
     double maxTemp = 0.0;
-    int hotX = 0;
-    int hotY = 0;
-    int coldX = 0;
-    int coldY = 0;
+    std::vector<Hotspot> hotSpots;
+    std::vector<Hotspot> coldSpots;
 };
 
 /// Convert raw thermal frames into displayable images.

@@ -4,6 +4,7 @@
 #include "ui/EmissivityDialog.h"
 #include "ui/FixedRangeDialog.h"
 #include "ui/HelpDialog.h"
+#include "ui/HotspotDialog.h"
 #include "ui/LockInDialog.h"
 #include "ui/ThermalView.h"
 #include "version.h"
@@ -286,6 +287,9 @@ void MainWindow::buildMenus()
         m_params.hotspot = HotspotMode::MinMax;
         pushParams();
     });
+    hotspotMenu->addSeparator();
+    QAction* hotspotCountAction = hotspotMenu->addAction(tr("Tracked hotspots..."));
+    connect(hotspotCountAction, &QAction::triggered, this, &MainWindow::showHotspotDialog);
 
     addToggle(viewMenu, tr("&Help Overlay"), m_params.showHelp, [this](bool on) {
         m_params.showHelp = on;
@@ -474,6 +478,10 @@ void MainWindow::loadSettings()
         readInt(QStringLiteral("processing/scale"), static_cast<int>(ScaleMode::Bicubic), 0, 4));
     m_params.hotspot = static_cast<HotspotMode>(
         readInt(QStringLiteral("processing/hotspot"), static_cast<int>(HotspotMode::Off), 0, 3));
+    m_params.hotspotMaxCount =
+        readInt(QStringLiteral("processing/hotspotMaxCount"), 1, 1, kMaxTrackedHotspots);
+    m_params.hotspotMinCount =
+        readInt(QStringLiteral("processing/hotspotMinCount"), 1, 1, kMaxTrackedHotspots);
 
     const int rotation = readInt(QStringLiteral("processing/rotation"), 0, 0, 359);
     m_params.rotation = (rotation % 90 == 0) ? rotation : 0;
@@ -521,6 +529,8 @@ void MainWindow::saveSettings()
     settings.setValue(QStringLiteral("processing/agc"), static_cast<int>(m_params.agcMode));
     settings.setValue(QStringLiteral("processing/scale"), static_cast<int>(m_params.scaleMode));
     settings.setValue(QStringLiteral("processing/hotspot"), static_cast<int>(m_params.hotspot));
+    settings.setValue(QStringLiteral("processing/hotspotMaxCount"), m_params.hotspotMaxCount);
+    settings.setValue(QStringLiteral("processing/hotspotMinCount"), m_params.hotspotMinCount);
     settings.setValue(QStringLiteral("processing/rotation"), m_params.rotation);
     settings.setValue(QStringLiteral("processing/zoom"), m_params.zoom);
     settings.setValue(QStringLiteral("processing/clahe"), m_params.useClahe);
@@ -648,6 +658,17 @@ void MainWindow::showFixedRangeDialog()
     }
     m_params.fixedRangeMin = dialog.minimum();
     m_params.fixedRangeMax = dialog.maximum();
+    pushParams();
+}
+
+void MainWindow::showHotspotDialog()
+{
+    HotspotDialog dialog(m_params.hotspotMaxCount, m_params.hotspotMinCount, this);
+    if (dialog.exec() != QDialog::Accepted) {
+        return;
+    }
+    m_params.hotspotMaxCount = dialog.hotCount();
+    m_params.hotspotMinCount = dialog.coldCount();
     pushParams();
 }
 
