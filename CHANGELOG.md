@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-09-13
+
+### Fixed
+
+- CI: install Qt 6.10.3, the newest release that aqtinstall can download, since
+  Qt 6.11+ uses an online repository layout aqtinstall does not yet support.
+
 ## [0.2.0] - 2026-09-13
 
 ### Added
@@ -61,7 +68,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Persistent settings, including window size and position.
 - Simulated camera backend for hardware-free runs.
 
-[Unreleased]: https://example.invalid/QtThermal/compare/v0.2.0...HEAD
+[Unreleased]: https://example.invalid/QtThermal/compare/v0.2.1...HEAD
+[0.2.1]: https://example.invalid/QtThermal/releases/tag/v0.2.1
 [0.2.0]: https://example.invalid/QtThermal/releases/tag/v0.2.0
 [0.1.2]: https://example.invalid/QtThermal/releases/tag/v0.1.2
 [0.1.1]: https://example.invalid/QtThermal/releases/tag/v0.1.1
