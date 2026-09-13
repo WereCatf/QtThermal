@@ -2,6 +2,7 @@
 
 #include "core/Temperature.h"
 #include "ui/EmissivityDialog.h"
+#include "ui/FixedRangeDialog.h"
 #include "ui/LockInDialog.h"
 #include "ui/ThermalView.h"
 #include "version.h"
@@ -14,7 +15,6 @@
 #include <QDateTime>
 #include <QFile>
 #include <QFileDialog>
-#include <QInputDialog>
 #include <QLabel>
 #include <QMenu>
 #include <QMenuBar>
@@ -70,10 +70,13 @@ void MainWindow::onFrameReady(const QImage& image)
     m_view->setImage(image);
 }
 
-void MainWindow::onStatusUpdated(double fps, double spotTemp)
+void MainWindow::onStatusUpdated(double fps, double spotTemp, double minTemp, double maxTemp)
 {
     m_fpsLabel->setText(tr("%1 FPS").arg(fps, 0, 'f', 1));
     m_spotLabel->setText(tr("%1 \u00b0C").arg(spotTemp, 0, 'f', 1));
+    m_sceneMinTemp = minTemp;
+    m_sceneMaxTemp = maxTemp;
+    m_sceneRangeValid = true;
 }
 
 void MainWindow::onConnectionChanged(bool connected)
@@ -451,8 +454,14 @@ void MainWindow::loadSettings()
     m_params.showReticule = settings.value(QStringLiteral("processing/reticule"), true).toBool();
     m_params.showColorbar = settings.value(QStringLiteral("processing/colorbar"), true).toBool();
     m_params.showHelp = settings.value(QStringLiteral("processing/help"), false).toBool();
-    m_params.fixedRangeMin = settings.value(QStringLiteral("processing/fixedMin"), 18.0).toDouble();
-    m_params.fixedRangeMax = settings.value(QStringLiteral("processing/fixedMax"), 35.0).toDouble();
+    m_params.fixedRangeMin =
+        qBound(-20.0, settings.value(QStringLiteral("processing/fixedMin"), 10.0).toDouble(), 600.0);
+    m_params.fixedRangeMax =
+        qBound(-20.0, settings.value(QStringLiteral("processing/fixedMax"), 40.0).toDouble(), 600.0);
+    if (m_params.fixedRangeMax <= m_params.fixedRangeMin) {
+        m_params.fixedRangeMin = 10.0;
+        m_params.fixedRangeMax = 40.0;
+    }
     m_params.env.emissivity = settings.value(QStringLiteral("processing/emissivity"), 0.95).toDouble();
     m_params.env.reflectedTemp =
         settings.value(QStringLiteral("processing/reflectedTemp"), 25.0).toDouble();
@@ -596,22 +605,13 @@ void MainWindow::setEmissivity(double value)
 
 void MainWindow::showFixedRangeDialog()
 {
-    bool accepted = false;
-    const double minimum = QInputDialog::getDouble(this, tr("Fixed AGC Range"),
-                                                   tr("Minimum temperature (\u00b0C)"),
-                                                   m_params.fixedRangeMin, -40.0, 1000.0, 1, &accepted);
-    if (!accepted) {
+    FixedRangeDialog dialog(m_params.fixedRangeMin, m_params.fixedRangeMax, m_sceneRangeValid,
+                            m_sceneMinTemp, m_sceneMaxTemp, this);
+    if (dialog.exec() != QDialog::Accepted) {
         return;
     }
-    const double maximum = QInputDialog::getDouble(this, tr("Fixed AGC Range"),
-                                                   tr("Maximum temperature (\u00b0C)"),
-                                                   m_params.fixedRangeMax, -40.0, 1000.0, 1, &accepted);
-    if (!accepted || maximum <= minimum) {
-        return;
-    }
-    m_params.fixedRangeMin = minimum;
-    m_params.fixedRangeMax = maximum;
-    m_params.agcMode = AgcMode::Fixed;
+    m_params.fixedRangeMin = dialog.minimum();
+    m_params.fixedRangeMax = dialog.maximum();
     pushParams();
 }
 

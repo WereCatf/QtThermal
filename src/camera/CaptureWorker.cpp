@@ -159,7 +159,7 @@ void CaptureWorker::run()
             fpsTimer.restart();
         }
 
-        emit statusUpdated(m_fps, frame.spotTemp);
+        emit statusUpdated(m_fps, frame.spotTemp, frame.minTemp, frame.maxTemp);
     }
 
     m_backend->stopStreaming();

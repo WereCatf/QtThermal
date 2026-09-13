@@ -30,7 +30,7 @@ protected:
 
 private slots:
     void onFrameReady(const QImage& image);
-    void onStatusUpdated(double fps, double spotTemp);
+    void onStatusUpdated(double fps, double spotTemp, double minTemp, double maxTemp);
     void onConnectionChanged(bool connected);
     void onDeviceInfoReady(const QString& model, const QString& firmware, const QString& partNumber,
                            const QString& serial, const QString& hardware, const QString& modelLong);
@@ -88,6 +88,10 @@ private:
 
     QImage m_lastImage;
     QString m_pendingDumpPath;
+
+    bool m_sceneRangeValid = false;
+    double m_sceneMinTemp = 0.0;
+    double m_sceneMaxTemp = 0.0;
 };
 
 } // namespace qtthermal

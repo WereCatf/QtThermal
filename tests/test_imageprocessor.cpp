@@ -47,6 +47,21 @@ ProcessingParams baseParams()
     return params;
 }
 
+double meanBrightness(const QImage& image)
+{
+    if (image.isNull()) {
+        return 0.0;
+    }
+    qint64 sum = 0;
+    for (int y = 0; y < image.height(); ++y) {
+        for (int x = 0; x < image.width(); ++x) {
+            const QRgb pixel = image.pixel(x, y);
+            sum += qRed(pixel) + qGreen(pixel) + qBlue(pixel);
+        }
+    }
+    return static_cast<double>(sum) / (static_cast<double>(image.width()) * image.height() * 3.0);
+}
+
 } // namespace
 
 class ImageProcessorTest : public QObject {
@@ -58,6 +73,7 @@ private slots:
     void processBasic();
     void processScaleDoublesSize();
     void processFixedRange();
+    void processFixedRangeContainsScene();
     void processRotationSwapsAxes();
     void processWithOverlays();
 };
@@ -111,6 +127,28 @@ void ImageProcessorTest::processFixedRange()
     params.fixedRangeMax = 40.0;
     const ProcessedFrame frame = processor.process(makeThermal(64, 48), makeIr(64, 48), params);
     QVERIFY(!frame.image.isNull());
+}
+
+void ImageProcessorTest::processFixedRangeContainsScene()
+{
+    // The synthetic scene spans 20-30 C. A window that contains it must render
+    // a visible image, while one entirely above it saturates to black.
+    ImageProcessor processor;
+    ProcessingParams inRange = baseParams();
+    inRange.agcMode = AgcMode::Fixed;
+    inRange.fixedRangeMin = 15.0;
+    inRange.fixedRangeMax = 45.0;
+
+    ProcessingParams aboveRange = inRange;
+    aboveRange.fixedRangeMin = 100.0;
+    aboveRange.fixedRangeMax = 200.0;
+
+    const ProcessedFrame inFrame = processor.process(makeThermal(64, 48), makeIr(64, 48), inRange);
+    const ProcessedFrame aboveFrame =
+        processor.process(makeThermal(64, 48), makeIr(64, 48), aboveRange);
+
+    QVERIFY(meanBrightness(inFrame.image) > meanBrightness(aboveFrame.image));
+    QVERIFY(meanBrightness(inFrame.image) > 10.0);
 }
 
 void ImageProcessorTest::processRotationSwapsAxes()

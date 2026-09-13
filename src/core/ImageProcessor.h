@@ -48,8 +48,8 @@ struct ProcessingParams {
     bool showColorbar = true;
     bool showHelp = false;
     HotspotMode hotspot = HotspotMode::Off;
-    double fixedRangeMin = 18.0;
-    double fixedRangeMax = 35.0;
+    double fixedRangeMin = 10.0;
+    double fixedRangeMax = 40.0;
     EnvParams env;
     double fps = 0.0;
     GainMode gain = GainMode::High;
