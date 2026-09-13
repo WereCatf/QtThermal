@@ -1,5 +1,11 @@
 name: Build
 
+# Qt 6.11+ uses a per-architecture online repository layout that the aqtinstall
+# version pinned by install-qt-action@v4 cannot read, so use the newest release
+# that is still installable (6.10.3).
+env:
+  QT_VERSION: '6.10.3'
+
 on:
   push:
     tags:
@@ -52,7 +58,7 @@ jobs:
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
         with:
-          version: '6.11.1'
+          version: ${{ env.QT_VERSION }}
           arch: win64_msvc2022_64
           cache: true
 
