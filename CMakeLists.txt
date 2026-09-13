@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.21)
 
 project(
     QtThermal
-    VERSION 0.1.2
+    VERSION 0.2.0
     DESCRIPTION "Qt6 thermal camera viewer for P3-series USB thermal cameras"
     HOMEPAGE_URL "https://example.invalid/QtThermal"
     LANGUAGES CXX
@@ -26,6 +26,10 @@ option(QTTHERMAL_WARNINGS_AS_ERRORS "Treat compiler warnings as errors" ON)
 
 find_package(Qt6 6.5 REQUIRED COMPONENTS Core Gui Widgets)
 qt_standard_project_setup(REQUIRES 6.5)
+
+if(WIN32)
+    enable_language(RC)
+endif()
 
 # ---------------------------------------------------------------------------
 # USB transport
@@ -125,6 +129,30 @@ qt_add_executable(QtThermal
     src/ui/LockInDialog.cpp
 )
 
+qt_add_resources(QtThermal "qtthermal_icons"
+    PREFIX "/icons"
+    BASE "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons"
+    FILES
+        "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/QtThermal_16.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/QtThermal_24.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/QtThermal_32.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/QtThermal_48.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/QtThermal_64.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/QtThermal_128.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/QtThermal_256.png"
+        "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/QtThermal.ico"
+)
+
+if(WIN32)
+    set(QTTHERMAL_ICON_PATH "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/QtThermal.ico")
+    configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/resources/windows/QtThermal.rc.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/generated/QtThermal.rc"
+        @ONLY
+    )
+    target_sources(QtThermal PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated/QtThermal.rc")
+endif()
+
 target_link_libraries(QtThermal PRIVATE
     qtthermal_lib
     Qt6::Widgets
@@ -152,14 +180,24 @@ endif()
 # ---------------------------------------------------------------------------
 install(TARGETS QtThermal
     BUNDLE DESTINATION .
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    RUNTIME DESTINATION .
 )
 
-if(QT_VERSION VERSION_GREATER_EQUAL 6.3)
-    qt_generate_deploy_app_script(
-        TARGET QtThermal
-        OUTPUT_SCRIPT deploy_script
-        NO_UNSUPPORTED_PLATFORM_ERROR
-    )
-    install(SCRIPT ${deploy_script})
-endif()
+# Deploy Qt next to the executable in a flat, portable layout (executable,
+# Qt DLLs, compiler runtime, plugin folders and translations all in one place).
+qt_generate_deploy_script(
+    TARGET QtThermal
+    OUTPUT_SCRIPT deploy_script
+    NAME QtThermal
+    CONTENT "
+set(QT_DEPLOY_BIN_DIR \".\")
+qt6_deploy_runtime_dependencies(
+    EXECUTABLE \"$<TARGET_FILE:QtThermal>\"
+    BIN_DIR \".\"
+    PLUGINS_DIR \".\"
+    NO_TRANSLATIONS
+    GENERATE_QT_CONF
+)
+"
+)
+install(SCRIPT ${deploy_script})

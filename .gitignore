@@ -2,7 +2,12 @@
 build/
 build-*/
 out/
+dist/
+package/
 cmake-build-*/
+
+# Installer output
+installer/Output/
 
 # CMake
 CMakeCache.txt

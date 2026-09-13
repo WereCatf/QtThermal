@@ -6,6 +6,20 @@
 #include <QCommandLineOption>
 #include <QCommandLineParser>
 #include <QDebug>
+#include <QIcon>
+
+namespace {
+
+QIcon applicationIcon()
+{
+    QIcon icon;
+    for (const int size : {16, 24, 32, 48, 64, 128, 256}) {
+        icon.addFile(QStringLiteral(":/icons/QtThermal_%1.png").arg(size));
+    }
+    return icon;
+}
+
+} // namespace
 
 int main(int argc, char* argv[])
 {
@@ -14,6 +28,7 @@ int main(int argc, char* argv[])
     QApplication::setOrganizationDomain(QStringLiteral(QTTHERMAL_ORGANIZATION_DOMAIN));
     QApplication::setApplicationName(QStringLiteral(QTTHERMAL_APPLICATION_NAME));
     QApplication::setApplicationVersion(QStringLiteral(QTTHERMAL_VERSION_STRING));
+    QApplication::setWindowIcon(applicationIcon());
 
     QCommandLineParser parser;
     parser.setApplicationDescription(QStringLiteral("Qt6 thermal camera viewer for P3-series USB cameras"));
